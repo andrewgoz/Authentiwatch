@@ -611,8 +611,8 @@ function qrBack() {
 
 <div id="scan">
 <table>
-<tr><td><canvas id="qr-canvas"></canvas></td></tr>
 <tr><td><button class="btn" type="button" onclick="scanBack()">Cancel</button></td></tr>
+<tr><td><canvas id="qr-canvas"></canvas></td></tr>
 </table>
 </div>
 
@@ -620,9 +620,10 @@ function qrBack() {
 </div>
 
 <div id="showqr">
-<table><tr><td id="qrcode"></td></tr><tr><td>
-<button class="btn" type="button" onclick="qrBack()">Back</button>
-</td></tr></table>
+<table>
+<tr><td><button class="btn" type="button" onclick="qrBack()">Back</button></td></tr>
+<tr><td id="qrcode"></td></tr>
+</table>
 </div>
 
 </div>
