@@ -20,6 +20,8 @@ It contains:
 of Gadgetbridge - making your phone make noise so you can find it.
 * `Keep Msgs` - default is `Off`. When Gadgetbridge disconnects, should Bangle.js
 keep any messages it has received, or should it delete them?
+* `Overwrite GPS` - when GPS is requested by an app, this doesn't use Bangle.js's GPS
+but instead asks Gadgetbridge on the phone to use the phone's GPS
 * `Messages` - launches the messages app, showing a list of messages
 
 ## How it works
@@ -42,6 +44,10 @@ The boot code also provides some useful functions:
   * `id` - a custom (string) ID
   * `timeout` - a timeout for the request in milliseconds (default 30000ms)
   * `xpath` an xPath query to run on the request (but right now the URL requested must be XML - HTML is rarely XML compliant)
+  * `return`  for xpath, if not specified, one result is returned. If `return:"array"` an array of results is returned.
+  * `method` HTTP method (default is `get`) - `get/post/head/put/patch/delete`
+  * `body` the body of the HTTP request
+  * `headers` an object of headers, eg `{HeaderOne : "headercontents"}`
 
 eg:
 

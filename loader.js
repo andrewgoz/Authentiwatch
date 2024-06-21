@@ -16,7 +16,7 @@ if (window.location.host=="banglejs.com") {
     'This is not the official Bangle.js App Loader - you can try the <a href="https://banglejs.com/apps/">Official Version</a> here.';
 }
 
-var RECOMMENDED_VERSION = "2v15";
+var RECOMMENDED_VERSION = "2v22";
 // could check http://www.espruino.com/json/BANGLEJS.json for this
 
 // We're only interested in Bangles
@@ -49,7 +49,7 @@ function onFoundDeviceInfo(deviceId, deviceVersion) {
   if (deviceId != "BANGLEJS" && deviceId != "BANGLEJS2") {
     showToast(`You're using ${deviceId}, not a Bangle.js. Did you want <a href="https://espruino.com/apps">espruino.com/apps</a> instead?` ,"warning", 20000);
   } else if (versionLess(deviceVersion, RECOMMENDED_VERSION)) {
-    showToast(`You're using an old Bangle.js firmware (${deviceVersion}) and ${RECOMMENDED_VERSION} is available (<a href="http://www.espruino.com/ChangeLog" target="_blank">see changes</a>). You can update ${fwExtraText}<a href="${fwURL}" target="_blank">with the instructions here</a>` ,"warning", 20000);
+    showToast(`You're using an old Bangle.js firmware (${deviceVersion}) and ${RECOMMENDED_VERSION} is available (<a href="https://www.espruino.com/ChangeLog" target="_blank">see changes</a>). You can update ${fwExtraText}<a href="${fwURL}" target="_blank">with the instructions here</a>` ,"warning", 20000);
   }
   // check against features shown?
   filterAppsForDevice(deviceId);
@@ -72,6 +72,7 @@ var submittedUsageInfo = "";
 function sendUsageStats() {
   if (!SETTINGS.sendUsageStats) return; // not allowed!
   if (device.uid === undefined) return; // no data yet!
+  if (!device.appsInstalled.length) return; // no installed apps or disconnected
   /* Work out what we'll send:
   * A suitably garbled UID so we can avoid too many duplicates
   * firmware version
@@ -106,22 +107,24 @@ function filterAppsForDevice(deviceId) {
   // set the device dropdown
   document.querySelector(".devicetype-nav span").innerText = device ? device.name : "All apps";
 
-  if (!device) {
-    if (deviceId!==undefined)
-      showToast(`Device ID ${deviceId} not recognised. Some apps may not work`, "warning");
-    appJSON = originalAppJSON;
-  } else {
-    // Now filter apps
-    appJSON = originalAppJSON.filter(app => {
-      var supported = ["BANGLEJS"];
-      if (!app.supports) {
-        console.log(`App ${app.id} doesn't include a 'supports' field - ignoring`);
+  if (originalAppJSON) { // JSON might not have loaded yet
+    if (!device) {
+      if (deviceId!==undefined)
+        showToast(`Device ID ${deviceId} not recognised. Some apps may not work`, "warning");
+      appJSON = originalAppJSON;
+    } else {
+      // Now filter apps
+      appJSON = originalAppJSON.filter(app => {
+        var supported = ["BANGLEJS"];
+        if (!app.supports) {
+          console.log(`App ${app.id} doesn't include a 'supports' field - ignoring`);
+          return false;
+        }
+        if (app.supports.includes(deviceId)) return true;
+        //console.log(`Dropping ${app.id} because ${deviceId} is not in supported list ${app.supports.join(",")}`);
         return false;
-      }
-      if (app.supports.includes(deviceId)) return true;
-      //console.log(`Dropping ${app.id} because ${deviceId} is not in supported list ${app.supports.join(",")}`);
-      return false;
-    });
+      });
+    }
   }
   refreshLibrary();
 }
@@ -203,8 +206,11 @@ window.addEventListener('load', (event) => {
     });
   });
 
+  var el;
+
   // Button to install all default apps in one go
-  document.getElementById("reinstallall").addEventListener("click",event=>{
+  el = document.getElementById("reinstallall");
+  if (el) el.addEventListener("click",event=>{
     var promise =  showPrompt("Reinstall","Really re-install all apps?").then(() => {
       Comms.reset().then(_ =>
         getInstalledApps()
@@ -230,8 +236,10 @@ window.addEventListener('load', (event) => {
     });
   });
 
+
   // Button to install all default apps in one go
-  document.getElementById("installdefault").addEventListener("click",event=>{
+  el = document.getElementById("installdefault");
+  if (el) el.addEventListener("click", event=>{
     getInstalledApps().then(() => {
       if (device.id == "BANGLEJS")
         return httpGet("defaultapps_banglejs1.json");
@@ -246,25 +254,39 @@ window.addEventListener('load', (event) => {
     });
   });
 
+  // Button to reset the Bangle's settings
+  el = document.getElementById("defaultbanglesettings");
+  if (el) el.addEventListener("click", event=>{
+    showPrompt("Reset Settings","Really reset Bangle.js settings?").then(() => {
+      Comms.write("\x10require('Storage').erase('setting.json');load()\n");
+      showToast("Settings reset!", "success");
+    }, function() { /* cancelled */ });
+  });
+
+
   // BLE Compatibility
   var selectBLECompat = document.getElementById("settings-ble-compat");
-  Puck.increaseMTU = !SETTINGS.bleCompat;
-  selectBLECompat.checked = !!SETTINGS.bleCompat;
-  selectBLECompat.addEventListener("change",event=>{
-    console.log("BLE compatibility mode "+(event.target.checked?"on":"off"));
-    SETTINGS.bleCompat = event.target.checked;
+  if (selectBLECompat) {
     Puck.increaseMTU = !SETTINGS.bleCompat;
-    saveSettings();
-  });
+    selectBLECompat.checked = !!SETTINGS.bleCompat;
+    selectBLECompat.addEventListener("change",event=>{
+      console.log("BLE compatibility mode "+(event.target.checked?"on":"off"));
+      SETTINGS.bleCompat = event.target.checked;
+      Puck.increaseMTU = !SETTINGS.bleCompat;
+      saveSettings();
+    });
+  }
 
   // Sending usage stats
   var selectUsageStats = document.getElementById("settings-usage-stats");
-  selectUsageStats.checked = !!SETTINGS.sendUsageStats;
-  selectUsageStats.addEventListener("change",event=>{
-    console.log("Send Usage Stats "+(event.target.checked?"on":"off"));
-    SETTINGS.sendUsageStats = event.target.checked;
-    saveSettings();
-  });
+  if (selectUsageStats) {
+    selectUsageStats.checked = !!SETTINGS.sendUsageStats;
+    selectUsageStats.addEventListener("change",event=>{
+      console.log("Send Usage Stats "+(event.target.checked?"on":"off"));
+      SETTINGS.sendUsageStats = event.target.checked;
+      saveSettings();
+    });
+  }
 
   // Load language list
   httpGet("lang/index.json").then(languagesJSON=>{

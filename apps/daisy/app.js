@@ -1,6 +1,5 @@
-var SunCalc = require("https://raw.githubusercontent.com/mourner/suncalc/master/suncalc.js");
-const storage = require('Storage');
-const locale = require("locale");
+var SunCalc = require("suncalc"); // from modules folder
+const widget_utils = require('widget_utils');
 const SETTINGS_FILE = "daisy.json";
 const LOCATION_FILE = "mylocation.json";
 const h = g.getHeight();
@@ -70,7 +69,7 @@ function getSteps() {
   try {
     return Bangle.getHealthStatus("day").steps;
   } catch (e) {
-    if (WIDGETS.wpedom !== undefined) 
+    if (WIDGETS.wpedom !== undefined)
       return WIDGETS.wpedom.getSteps();
     else
       return 0;
@@ -151,7 +150,7 @@ function prevInfo() {
 function clearInfo() {
   g.setColor(g.theme.bg);
   //g.setColor(g.theme.fg);
-  g.fillRect((w/2) - infoWidth, infoLine - infoHeight, (w/2) + infoWidth, infoLine + infoHeight); 
+  g.fillRect((w/2) - infoWidth, infoLine - infoHeight, (w/2) + infoWidth, infoLine + infoHeight);
 }
 
 function drawInfo() {
@@ -195,14 +194,14 @@ function draw() {
 
 function drawClock() {
   var date = new Date();
-  var timeStr = require("locale").time(date,1);
+  //var timeStr = require("locale").time(date,1);
   var da = date.toString().split(" ");
-  var time = da[4].substr(0,5);
+  //var time = da[4].substr(0,5);
   var hh = da[4].substr(0,2);
   var mm = da[4].substr(3,2);
   var steps = getSteps();
   var p_steps = Math.round(100*(steps/10000));
-  
+
   g.reset();
   g.setColor(g.theme.bg);
   g.fillRect(0, 0, w, h);
@@ -218,7 +217,7 @@ function drawClock() {
   g.drawString(mm, (w/2) + 1, h/2);
 
   drawInfo();
-  
+
   // recalc sunrise / sunset every hour
   if (drawCount % 60 == 0)
     updateSunRiseSunSet(new Date(), location.lat, location.lon);
@@ -254,7 +253,7 @@ function resetHrm() {
 Bangle.on('HRM', function(hrm) {
   hrmCurrent = hrm.bpm;
   hrmConfidence = hrm.confidence;
-  log_debug("HRM=" + hrm.bpm + " (" + hrm.confidence + ")"); 
+  log_debug("HRM=" + hrm.bpm + " (" + hrm.confidence + ")");
   if (infoMode == "ID_HRM" ) drawHrm();
 });
 
@@ -360,7 +359,7 @@ function getGaugeImage(p) {
     palette : pal2,
     buffer : require("heatshrink").decompress(atob("AH4A/AH4AChWq1WpqtUFUgpBFYYABoApggQqDFYlVqBVjFYxZfFQorGLLrWCFZbgbVguoBQcFLD8qFQYMHiosDKzoOJFgZYYKwYPLFgZWawARMLDJWCawgAJcAZWYCZ6FCLCkKFQOgCZ8BFYNUFaZWSLAlAQShWQLAiESQQRtTLAKESFQOoFacFQiSCCwArTgCESQSyEUlTZTboyCnQiSCYQiSCYQiSCZQgdAVxwqYQgSwMVwOoFbMFWBquaWCArBVzKwDbRoqaWATcKbQKuaWAbcKbQKuaWAbcKVzqwNFYIqcWATaKVziwDbhDaebhjaebhgrBbTrcCFZDafbheqFcTcHbT7cDFY0CbT7cDqArxhWqwArfgFVqgrHFUDcBFY0qFcdVFY2oFcMFFY2qFclAFYugFcMBFYsCFctQFYuAFcMAFYsKFctUFYoqigEVFeEqFctVFYmoFccFFYmqFc1AcIdQFccBFf4rbGAoAhKQYr/Fa8FFc9UFYYqkgEVFf4r/FYwDDAEZTDFf4r/Ff4rbqorooArBqArlgIr/Ff4r/Ff4r/Ff4r/Ff4r/Ff4r/Ff4rbqgrlgorCioroAYIr/Ff4r/FbYDDAEZTDFf4r/FYtAFclVFYUBFc9QFf4rZAgoAgKQor/FbFUFccFFYkVFcwFDioFEAD4lFGIorgPogrtWoYAfqorEgIrlqArFAwgAdEg4rlPgqKFADrUHcQorfA4sVA4wAbEY4zHFbh7GRY4AbaY7jBqAqfERArrMBAAZUxNVbkEVFZAJBFcJhRAC6lJFYLcebQIrIBRTaXJhIrhUhLcfD5YLBbjtVFZTceZ5jceJRpkLVyaiLWDpJNFYKwaUIIrMSIKwaDhw6OVx50NFYKwZDZ6waOaCTBQjBGBZZw8CQi4ZBOR6EYeySEYQSCEaQSITDH6BvGIaKEWQSSEEbqQVVQgRYSKwLGUQgRCQKwTFUC4RYQKwSCTDAhEONQTwULAqcNCARWVLAhGMB55YPDhQqDKy4dFFhAMMLCzgFawZWbEI4AIGogAYFZtAFbgsMFTyyGVkBZOKr7gJazoA/AHIA="))
   };
-  
+
   // p90
   if (p >= 90 && p < 100) return {
     width : 176, height : 176, bpp : 2,
@@ -410,7 +409,7 @@ function BUTTON(name,x,y,w,h,c,f,tx) {
 // if pressed the callback
 BUTTON.prototype.check = function(x,y) {
   //console.log(this.name + ":check() x=" + x + " y=" + y +"\n");
-  
+
   if (x>= this.x && x<= (this.x + this.w) && y>= this.y && y<= (this.y + this.h)) {
     log_debug(this.name + ":callback\n");
     this.callback();
@@ -472,7 +471,7 @@ function checkIdle() {
     warned = false;
     return;
   }
-  
+
   let hour = (new Date()).getHours();
   let active = (hour >= 9 && hour < 21);
   //let active = true;
@@ -501,7 +500,7 @@ function buzzer(n) {
 
   if (n-- < 1) return;
   Bangle.buzz(250);
-  
+
   if (buzzTimeout) clearTimeout(buzzTimeout);
   buzzTimeout = setTimeout(function() {
     buzzTimeout = undefined;
@@ -547,8 +546,6 @@ g.clear();
 Bangle.loadWidgets();
 /*
  * we are not drawing the widgets as we are taking over the whole screen
- * so we will blank out the draw() functions of each widget and change the
- * area to the top bar doesn't get cleared.
  */
-for (let wd of WIDGETS) {wd.draw=()=>{};wd.area="";}
+widget_utils.hide();
 draw();
