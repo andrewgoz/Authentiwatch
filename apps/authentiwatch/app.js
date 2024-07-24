@@ -35,9 +35,9 @@ function b32decode(seedstr) {
       buf |= c;
       bitcount += 5;
       if (bitcount >= 8) {
-        retstr += String.fromCharCode(buf >> (bitcount - 8));
-        buf &= (0xFF >> (16 - bitcount));
         bitcount -= 8;
+        retstr += String.fromCharCode(buf >> bitcount);
+        buf &= (0xFF >> (8 - bitcount));
       }
     }
   }
@@ -71,10 +71,7 @@ function hmac(key, message, algo) {
 
 function formatOtp(otp, digits) {
   // add 0 padding
-  let ret = "" + otp % Math.pow(10, digits);
-  while (ret.length < digits) {
-    ret = "0" + ret;
-  }
+  let ret = ("0".repeat(digits) + otp % Math.pow(10, digits)).slice(-digits);
   // add a space after every 3rd or 4th digit
   let re = (digits % 3 == 0 || (digits % 3 >= digits % 4 && digits % 4 != 0)) ? "" : ".";
   return ret.replace(new RegExp("(..." + re + ")", "g"), "$1 ").trim();
