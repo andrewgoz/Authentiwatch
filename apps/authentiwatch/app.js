@@ -18,7 +18,7 @@ const NOT_SUPPORTED = /*LANG*/"Not supported";
 
 // sample settings:
 // {tokens:[{"algorithm":"SHA1","digits":6,"period":30,"issuer":"","account":"","secret":"Bbb","label":"Aaa"}],misc:{}}
-var settings = require("Storage").readJSON(SETTINGS, true) || {tokens:[], misc:{}};
+var tokens, settings = require("Storage").readJSON(SETTINGS, true) || {tokens:[], misc:{}};
 if (settings.data  ) tokens = settings.data  ; /* v0.02 settings */
 if (settings.tokens) tokens = settings.tokens; /* v0.03+ settings */
 
@@ -126,8 +126,8 @@ function sizeFont(id, txt, w) {
   g.setFont("Vector", sz);
 }
 
-tokenY = id => id * TOKEN_HEIGHT + AR.y - state.listy;
-half = n => Math.floor(n / 2);
+const tokenY = id => id * TOKEN_HEIGHT + AR.y - state.listy;
+const half = n => Math.floor(n / 2);
 
 function timerCalc() {
   let timerfn = exitApp;
